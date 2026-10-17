@@ -1,0 +1,5 @@
+Sheet,Status,Rows,Missing columns,Duplicate rows
+Users,OK,3000,None,0
+Teachers,OK,60,None,0
+Courses,OK,60,None,0
+Transactions,OK,10000,None,0

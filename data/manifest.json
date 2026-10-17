@@ -1,0 +1,28 @@
+{
+  "Users": {
+    "file": "Users.csv",
+    "rows": 3000
+  },
+  "Courses": {
+    "file": "Courses.csv",
+    "rows": 60
+  },
+  "Transactions": {
+    "file": "Transactions.csv",
+    "rows": 10000
+  },
+  "Teachers": {
+    "file": "data/Teachers.csv",
+    "rows": 60,
+    "columns": [
+      "TeacherID",
+      "TeacherName",
+      "Age",
+      "Gender",
+      "Expertise",
+      "YearsOfExperience",
+      "TeacherRating"
+    ],
+    "source": "Copied from user-provided Teachers table in conversation."
+  }
+}

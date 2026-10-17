@@ -1,0 +1,15 @@
+EduPro supplied-data summary
+Users rows: 3000
+Teachers rows: 60
+Courses rows: 60
+Transactions rows: 10000
+Unique transaction IDs: 10000
+Recorded transaction Amount sum: 911323.47
+Unmatched user rows: 0
+Unmatched course rows: 0
+Unmatched teacher rows: 0
+Invalid transaction dates: 0
+Missing transaction amounts: 0
+Duplicate transaction IDs: 0
+
+Model scores are exploratory only; course-level modelling has 60 rows.
