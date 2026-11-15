@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # EduPro — Course Demand & Revenue Intelligence
 
 A Python and Streamlit project built using only the four EduPro tables supplied by the user. No external datasets or synthetic records are used.
@@ -29,7 +28,7 @@ The results are exploratory and should not be treated as a guarantee of future p
 
 ### 1. Open the Project
 
-Extract `EduPro_Project_Submission.zip` and open the extracted project folder in Visual Studio Code.
+Open the cloned or downloaded `EduPro-Course-Demand-Revenue-Forecasting` project folder in Visual Studio Code.
 
 ### 2. Open the Terminal
 
@@ -168,14 +167,10 @@ EduPro/
 └── src/
 ```
 
-This is the expected project structure. The actual folders and files in your project should be checked before submission.
+The structure above summarizes the main project files. The repository also includes supporting data-source notes, audit outputs, model comparison outputs, and reports.
 
 ## Conclusion
 
 EduPro provides an exploratory workflow for analysing recorded course demand and revenue. It combines data-quality checks, course and category summaries, dashboard exploration, and regression baseline comparisons.
 
 The current results indicate that enrollment prediction needs further improvement. Revenue models show stronger reported R² values, but their reliability for future periods remains to be established. The project should therefore be treated as an analytical starting point until data quality, feature construction, and chronological forecasting performance have been verified.
-=======
-# EduPro-Course-Demand-Revenue-Forecasting
-Python and Streamlit project for course demand analysis, revenue forecasting, data quality checks, and machine learning model comparison using EduPro data.
->>>>>>> cebf19278a281d0e367f474955ca99d83964db3a
