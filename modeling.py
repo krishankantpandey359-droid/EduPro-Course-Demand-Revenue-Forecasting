@@ -99,7 +99,7 @@ def _metrics(actual, predicted):
 
 
 def fit_all(transactions, courses, test_months=3):
-    """Compare models on the latest chronological holdout; never shuffle time."""
+    """Run a rolling one-step-ahead backtest on the latest chronological months."""
     panel = build_monthly_panel(transactions, courses)
     all_months = sorted(panel["Month"].unique())
     if test_months < 1 or len(all_months) <= test_months + 3:
