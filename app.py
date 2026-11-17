@@ -31,13 +31,13 @@ with tabs[1]:
 with tabs[2]:
  st.dataframe(cat,use_container_width=True,hide_index=True); st.plotly_chart(px.bar(cat,x='CourseCategory',y='AverageCourseRating',title='Average course rating by category'),use_container_width=True)
 with tabs[3]:
- st.warning('Only around 60 course rows are available; these scores are exploratory. They are not proof of production forecasting accuracy.')
- if st.button('Train and compare baseline models'):
+ st.warning('This is a chronological historical backtest, not a guarantee of future performance. The latest 3 months are held out; prior-month transaction history is used as the baseline.')
+ if st.button('Run chronological forecast backtest'):
   try:
-   with st.spinner('Training on supplied workbook data only...'): scores=fit_all(cf)
-   st.dataframe(scores,use_container_width=True,hide_index=True); st.download_button('Download model scores CSV',scores.to_csv(index=False).encode(),'model_comparison.csv','text/csv')
-  except Exception as e: st.error(f'Model comparison failed: {e}')
- st.markdown('Models: Linear Regression, Ridge, Lasso, Random Forest and Gradient Boosting. Metrics: cross-validated MAE, RMSE and R².')
+   with st.spinner('Building monthly course history and evaluating holdout months...'): scores=fit_all(tx, courses, test_months=3)
+   st.dataframe(scores,use_container_width=True,hide_index=True); st.download_button('Download chronological backtest CSV',scores.to_csv(index=False).encode(),'chronological_backtest.csv','text/csv')
+  except Exception as e: st.error(f'Forecast backtest failed: {e}')
+ st.markdown('Models: Ridge, Random Forest and HistGradientBoosting. Metrics: MAE, RMSE and WAPE. Each is compared with a naive previous-month baseline. Historical totals elsewhere in the app remain descriptive, not forecasts.')
 with tabs[4]: st.json(r['audit_info']); st.markdown('Unmatched IDs and invalid records are reported; source records are not silently discarded.')
 with tabs[5]:
  name=st.selectbox('Choose a table',['Users','Teachers','Courses','Transactions','Course-level features']); obj={'Users':users,'Teachers':teachers,'Courses':courses,'Transactions':tx,'Course-level features':cf}[name]
