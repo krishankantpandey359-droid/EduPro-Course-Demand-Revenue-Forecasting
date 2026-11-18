@@ -82,7 +82,8 @@ def _make_pipeline(model):
         ]), numeric),
         ("categorical", Pipeline([
             ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("onehot", OneHotEncoder(handle_unknown="ignore")),
+            # Dense output is required by HistGradientBoostingRegressor.
+            ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
         ]), categorical),
     ])
     return Pipeline([("preprocess", prep), ("model", model)])
