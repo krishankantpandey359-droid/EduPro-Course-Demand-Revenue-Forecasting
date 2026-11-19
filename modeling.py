@@ -34,9 +34,23 @@ def build_monthly_panel(transactions, courses):
         raise ValueError(f"Courses missing columns: {sorted(required_courses - set(courses.columns))}")
 
     tx = transactions[list(required_tx)].copy()
+    tx["CourseID"] = tx["CourseID"].astype("string").str.strip()
+    course_ids = courses["CourseID"].dropna().astype("string").str.strip()
+    if tx["TransactionID"].isna().any() or tx["TransactionID"].astype("string").str.strip().eq("").any():
+        raise ValueError("Transactions contain missing transaction IDs.")
+    if tx["TransactionID"].duplicated().any():
+        raise ValueError("Transactions contain duplicate transaction IDs.")
+    if tx["CourseID"].isna().any() or tx["CourseID"].eq("").any():
+        raise ValueError("Transactions contain missing course IDs.")
+    unknown_courses = sorted(set(tx["CourseID"].dropna()) - set(course_ids))
+    if unknown_courses:
+        raise ValueError(f"Transactions contain course IDs absent from Courses: {unknown_courses[:5]}")
     tx["TransactionDate"] = pd.to_datetime(tx["TransactionDate"], errors="coerce", dayfirst=True)
     tx["Amount"] = pd.to_numeric(tx["Amount"], errors="coerce")
-    tx = tx.dropna(subset=["TransactionDate", "CourseID"])
+    if tx["TransactionDate"].isna().any():
+        raise ValueError("Transactions contain invalid or missing dates.")
+    if tx["Amount"].isna().any() or not np.isfinite(tx["Amount"].to_numpy(dtype=float)).all():
+        raise ValueError("Transactions contain missing, non-numeric, or non-finite amounts.")
     if tx.empty:
         raise ValueError("No valid dated transactions are available for forecasting.")
 
@@ -45,7 +59,7 @@ def build_monthly_panel(transactions, courses):
         EnrollmentCount=("TransactionID", "nunique"),
         CourseRevenue=("Amount", lambda values: values.sum(min_count=1)),
     )
-    course_ids = courses["CourseID"].dropna().astype(str).drop_duplicates()
+    course_ids = course_ids.astype(str).drop_duplicates()
     months = pd.period_range(observed["Month"].min(), observed["Month"].max(), freq="M")
     panel = pd.MultiIndex.from_product(
         [course_ids, months], names=["CourseID", "Month"]
