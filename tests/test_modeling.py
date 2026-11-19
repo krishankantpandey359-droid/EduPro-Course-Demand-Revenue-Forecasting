@@ -71,6 +71,7 @@ def test_monthly_panel_rejects_duplicate_transaction_ids():
 
 def test_monthly_panel_rejects_invalid_dates_instead_of_silently_dropping_rows():
     transactions, courses = sample_data()
+    transactions["TransactionDate"] = transactions["TransactionDate"].astype(object)
     transactions.loc[0, "TransactionDate"] = "not-a-date"
     with pytest.raises(ValueError, match="invalid or missing TransactionDate"):
         build_monthly_panel(transactions, courses)
