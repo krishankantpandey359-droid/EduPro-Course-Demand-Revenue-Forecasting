@@ -60,3 +60,31 @@ def test_backtest_rejects_missing_required_columns():
     transactions, courses = sample_data()
     with pytest.raises(ValueError, match="Transactions missing columns"):
         build_monthly_panel(transactions.drop(columns=["Amount"]), courses)
+
+
+def test_monthly_panel_rejects_duplicate_transaction_ids():
+    transactions, courses = sample_data()
+    transactions.loc[1, "TransactionID"] = transactions.loc[0, "TransactionID"]
+    with pytest.raises(ValueError, match="duplicate TransactionID"):
+        build_monthly_panel(transactions, courses)
+
+
+def test_monthly_panel_rejects_invalid_dates_instead_of_silently_dropping_rows():
+    transactions, courses = sample_data()
+    transactions.loc[0, "TransactionDate"] = "not-a-date"
+    with pytest.raises(ValueError, match="invalid or missing TransactionDate"):
+        build_monthly_panel(transactions, courses)
+
+
+def test_monthly_panel_rejects_non_finite_amounts():
+    transactions, courses = sample_data()
+    transactions.loc[0, "Amount"] = float("inf")
+    with pytest.raises(ValueError, match="non-finite Amount"):
+        build_monthly_panel(transactions, courses)
+
+
+def test_monthly_panel_rejects_unknown_course_ids():
+    transactions, courses = sample_data()
+    transactions.loc[0, "CourseID"] = "UNKNOWN"
+    with pytest.raises(ValueError, match="absent from Courses"):
+        build_monthly_panel(transactions, courses)
