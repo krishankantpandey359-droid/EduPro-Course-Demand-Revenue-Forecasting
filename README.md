@@ -11,6 +11,10 @@ A Python and Streamlit project built using only the four EduPro tables supplied 
 
 These files contain the source data used by the project. The row counts refer to the records included in the current project.
 
+## Source-data handling
+
+The data provider confirmed to the project owner that the supplied dataset details are fictional and approved for public portfolio use. This is a provider confirmation reported by the project owner, not an independent verification. The four original CSV files are preserved exactly as supplied. The project does not mask or rewrite names, email-like fields, identifiers, or other source values, and it does not add fabricated records. Automated tests use the supplied files or separate in-memory fixtures only.
+
 ## Project Objective
 
 The objective of this project is to analyse EduPro's recorded course demand and revenue. It includes data-quality checks, course-level and category-level analysis, historical revenue analysis, and a comparison of regression models for enrollment count and course revenue.
