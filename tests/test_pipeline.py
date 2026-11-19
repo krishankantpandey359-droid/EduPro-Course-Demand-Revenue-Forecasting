@@ -46,3 +46,36 @@ def test_prepare_rejects_missing_source_table_without_fabricating_rows():
         assert "no missing rows will be fabricated" in str(exc)
     else:
         raise AssertionError("prepare() should reject an incomplete workbook")
+
+
+def test_prepare_rejects_missing_transaction_amount():
+    sheets = read_bundled(ROOT / "data")
+    sheets["Transactions"].loc[0, "Amount"] = None
+    try:
+        prepare(sheets)
+    except ValueError as exc:
+        assert "missing, non-numeric, or non-finite Amount" in str(exc)
+    else:
+        raise AssertionError("prepare() should reject a missing transaction amount")
+
+
+def test_prepare_rejects_duplicate_transaction_id():
+    sheets = read_bundled(ROOT / "data")
+    sheets["Transactions"].loc[1, "TransactionID"] = sheets["Transactions"].loc[0, "TransactionID"]
+    try:
+        prepare(sheets)
+    except ValueError as exc:
+        assert "duplicate TransactionID" in str(exc)
+    else:
+        raise AssertionError("prepare() should reject duplicate transaction IDs")
+
+
+def test_prepare_rejects_unknown_course_reference():
+    sheets = read_bundled(ROOT / "data")
+    sheets["Transactions"].loc[0, "CourseID"] = "UNKNOWN"
+    try:
+        prepare(sheets)
+    except ValueError as exc:
+        assert "references absent" in str(exc)
+    else:
+        raise AssertionError("prepare() should reject unmatched course references")
