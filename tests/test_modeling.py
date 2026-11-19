@@ -85,6 +85,7 @@ def test_monthly_panel_rejects_missing_amounts():
 
 def test_monthly_panel_rejects_invalid_dates():
     transactions, courses = sample_data()
+    transactions["TransactionDate"] = transactions["TransactionDate"].astype(object)
     transactions.loc[0, "TransactionDate"] = "not-a-date"
     with pytest.raises(ValueError, match="invalid or missing dates"):
         build_monthly_panel(transactions, courses)
