@@ -60,7 +60,7 @@ def build_monthly_panel(transactions, courses):
             "invalid or missing TransactionDate values."
         )
     if tx["Amount"].isna().any() or not np.isfinite(tx["Amount"].to_numpy(dtype=float)).all():
-        raise ValueError("Transactions contain missing, non-numeric, or non-finite Amount values.")
+        raise ValueError("Transactions contain missing, non-numeric, or non-finite Amount values (non-finite Amount check failed).")
 
     course_ids = courses["CourseID"].dropna().astype(str).str.strip()
     if course_ids.eq("").any():
