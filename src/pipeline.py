@@ -40,6 +40,24 @@ def prepare(sheets):
  tx['Amount']=pd.to_numeric(tx['Amount'],errors='coerce')
  tx['TransactionDate']=pd.to_datetime(tx['TransactionDate'],errors='coerce',dayfirst=True)
  audit_info={'unmatched_user_rows':int((~tx.UserID.isin(users.UserID)).sum()),'unmatched_course_rows':int((~tx.CourseID.isin(courses.CourseID)).sum()),'unmatched_teacher_rows':int((~tx.TeacherID.isin(teachers.TeacherID)).sum()),'invalid_dates':int(tx.TransactionDate.isna().sum()),'missing_amounts':int(tx.Amount.isna().sum()),'duplicate_transaction_ids':int(tx.TransactionID.duplicated().sum())}
+ # Fail fast on invalid transaction keys and measures. The audit report remains
+ # available for inspection, but invalid rows must not silently enter forecasts.
+ for name, frame, key in [('Users', users, 'UserID'), ('Teachers', teachers, 'TeacherID'), ('Courses', courses, 'CourseID')]:
+  if frame[key].isna().any() or frame[key].eq('').any():
+   raise ValueError(f"{name} contains missing or blank {key} values.")
+  if frame[key].duplicated().any():
+   raise ValueError(f"{name} contains duplicate {key} values.")
+ for key in ['TransactionID','UserID','CourseID','TeacherID']:
+  if tx[key].isna().any() or tx[key].eq('').any():
+   raise ValueError(f"Transactions contain missing or blank {key} values.")
+ if audit_info['duplicate_transaction_ids']:
+  raise ValueError("Transactions contain duplicate TransactionID values.")
+ if audit_info['invalid_dates']:
+  raise ValueError(f"Transactions contain {audit_info['invalid_dates']} invalid or missing TransactionDate values.")
+ if audit_info['missing_amounts'] or not np.isfinite(tx['Amount'].to_numpy(dtype=float)).all():
+  raise ValueError("Transactions contain missing, non-numeric, or non-finite Amount values.")
+ if audit_info['unmatched_user_rows'] or audit_info['unmatched_course_rows'] or audit_info['unmatched_teacher_rows']:
+  raise ValueError("Transactions contain UserID, CourseID, or TeacherID references absent from their source tables.")
  agg=tx.groupby('CourseID').agg(EnrollmentCount=('TransactionID','nunique'),CourseRevenue=('Amount',lambda s:s.sum(min_count=1)),UniqueUsers=('UserID','nunique'),PaidTransactions=('Amount',lambda s:int((s.fillna(0)>0).sum())),FreeTransactions=('Amount',lambda s:int((s.fillna(0)==0).sum()))).reset_index()
  cf=courses.merge(agg,on='CourseID',how='left',validate='one_to_one')
  for c in ['EnrollmentCount','CourseRevenue','UniqueUsers','PaidTransactions','FreeTransactions']: cf[c]=cf[c].fillna(0)
