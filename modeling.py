@@ -33,19 +33,51 @@ def build_monthly_panel(transactions, courses):
     if not required_courses.issubset(courses.columns):
         raise ValueError(f"Courses missing columns: {sorted(required_courses - set(courses.columns))}")
 
-    tx = transactions[list(required_tx)].copy()
-    tx["TransactionDate"] = pd.to_datetime(tx["TransactionDate"], errors="coerce", dayfirst=True)
+    # Preserve a deterministic column order and fail loudly rather than
+    # silently dropping rows that would change the demand/revenue targets.
+    tx = transactions[["TransactionID", "CourseID", "TransactionDate", "Amount"]].copy()
+    for column in ("TransactionID", "CourseID"):
+        tx[column] = tx[column].astype("string").str.strip()
+    if tx[["TransactionID", "CourseID"]].isna().any().any() or (
+        tx[["TransactionID", "CourseID"]].eq("").any().any()
+    ):
+        raise ValueError("Transactions contain missing or blank transaction/course IDs.")
+
+    duplicate_ids = int(tx["TransactionID"].duplicated().sum())
+    if duplicate_ids:
+        raise ValueError(
+            f"Transactions contain {duplicate_ids} duplicate TransactionID values; "
+            "resolve duplicates before forecasting."
+        )
+
+    tx["TransactionDate"] = pd.to_datetime(
+        tx["TransactionDate"], errors="coerce", dayfirst=True
+    )
     tx["Amount"] = pd.to_numeric(tx["Amount"], errors="coerce")
-    tx = tx.dropna(subset=["TransactionDate", "CourseID"])
-    if tx.empty:
-        raise ValueError("No valid dated transactions are available for forecasting.")
+    if tx["TransactionDate"].isna().any():
+        raise ValueError(
+            f"Transactions contain {int(tx['TransactionDate'].isna().sum())} "
+            "invalid or missing TransactionDate values."
+        )
+    if tx["Amount"].isna().any() or not np.isfinite(tx["Amount"].to_numpy(dtype=float)).all():
+        raise ValueError("Transactions contain missing, non-numeric, or non-finite Amount values.")
+
+    course_ids = courses["CourseID"].dropna().astype(str).str.strip()
+    if course_ids.eq("").any():
+        raise ValueError("Courses contains blank CourseID values.")
+    unknown_courses = sorted(set(tx["CourseID"].astype(str)) - set(course_ids))
+    if unknown_courses:
+        raise ValueError(
+            "Transactions reference CourseID values absent from Courses: "
+            + ", ".join(unknown_courses[:10])
+        )
 
     tx["Month"] = tx["TransactionDate"].dt.to_period("M")
     observed = tx.groupby(["CourseID", "Month"], as_index=False).agg(
         EnrollmentCount=("TransactionID", "nunique"),
         CourseRevenue=("Amount", lambda values: values.sum(min_count=1)),
     )
-    course_ids = courses["CourseID"].dropna().astype(str).drop_duplicates()
+    course_ids = course_ids.drop_duplicates()
     months = pd.period_range(observed["Month"].min(), observed["Month"].max(), freq="M")
     panel = pd.MultiIndex.from_product(
         [course_ids, months], names=["CourseID", "Month"]
