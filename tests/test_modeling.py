@@ -89,3 +89,9 @@ def test_monthly_panel_rejects_unknown_course_ids():
     transactions.loc[0, "CourseID"] = "UNKNOWN"
     with pytest.raises(ValueError, match="absent from Courses"):
         build_monthly_panel(transactions, courses)
+
+@pytest.mark.parametrize("test_months", [0, -1, True, False, 3.5, "3", None])
+def test_backtest_rejects_invalid_holdout_month_count(test_months):
+    transactions, courses = sample_data()
+    with pytest.raises(ValueError, match="test_months must be a positive integer"):
+        fit_all(transactions, courses, test_months=test_months)
