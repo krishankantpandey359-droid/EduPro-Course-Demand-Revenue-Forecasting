@@ -133,9 +133,17 @@ def _metrics(actual, predicted):
 
 def fit_all(transactions, courses, test_months=3):
     """Run a rolling one-step-ahead backtest on the latest chronological months."""
+    if (
+        isinstance(test_months, (bool, np.bool_))
+        or not isinstance(test_months, (int, np.integer))
+        or test_months < 1
+    ):
+        raise ValueError("test_months must be a positive integer.")
+
+    test_months = int(test_months)
     panel = build_monthly_panel(transactions, courses)
     all_months = sorted(panel["Month"].unique())
-    if test_months < 1 or len(all_months) <= test_months + 3:
+    if len(all_months) <= test_months + 3:
         raise ValueError("Need at least four history months plus the requested holdout months.")
 
     first_test_month = all_months[-test_months]
