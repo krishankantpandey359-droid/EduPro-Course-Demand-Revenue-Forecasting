@@ -22,7 +22,12 @@ def audit(sheets):
  rows=[]
  for name,cols in REQUIRED.items():
   if name not in sheets: rows.append({'Sheet':name,'Status':'MISSING','Rows':0,'Missing columns':', '.join(cols),'Duplicate rows':None}); continue
-  d=sheets[name]; miss=[c for c in cols if c not in d.columns]
+  d=sheets[name]
+  duplicate_columns = d.columns[d.columns.duplicated()].unique().tolist()
+  miss=[c for c in cols if c not in d.columns]
+  if duplicate_columns:
+   rows.append({'Sheet':name,'Status':'DUPLICATE COLUMNS','Rows':len(d),'Missing columns':', '.join(miss) or 'None','Duplicate rows':int(d.duplicated().sum())})
+   continue
   rows.append({'Sheet':name,'Status':'OK' if not miss else 'COLUMN CHECK NEEDED','Rows':len(d),'Missing columns':', '.join(miss) or 'None','Duplicate rows':int(d.duplicated().sum())})
  return pd.DataFrame(rows)
 def prepare(sheets):
@@ -30,6 +35,11 @@ def prepare(sheets):
  if missing: raise ValueError('Missing sheet(s): '+', '.join(missing)+'. Upload the original workbook with all four sheets; no missing rows will be fabricated.')
  for n,cols in REQUIRED.items():
   miss=[c for c in cols if c not in sheets[n].columns]
+  if sheets[n].columns.has_duplicates:
+   duplicates=sheets[n].columns[sheets[n].columns.duplicated()].unique().tolist()
+   raise ValueError(f"{n} contains duplicate column names: {duplicates}")
+  if any(not str(column).strip() for column in sheets[n].columns):
+   raise ValueError(f"{n} contains blank column names.")
   if miss: raise ValueError(f'{n} is missing columns: {miss}')
  users,teachers,courses,tx=[sheets[n].copy() for n in ('Users','Teachers','Courses','Transactions')]
  for d,cols in [(users,['UserID']),(teachers,['TeacherID']),(courses,['CourseID']),(tx,['TransactionID','UserID','CourseID','TeacherID'])]:
