@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This project presents a data analysis and predictive modelling workflow for studying course demand and revenue on EduPro. It uses the user-supplied workbook containing Users, Teachers, Courses, and Transactions sheets. The analysis examines recorded enrollment activity, course revenue, category-level revenue, data quality, and baseline regression models. Five models are compared using cross-validated Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and R². Ridge gives the lowest MAE among the tested models for EnrollmentCount, while Gradient Boosting gives the lowest MAE for CourseRevenue. However, the enrollment model results are weak, and the high revenue-model R² requires further validation before operational use. No external dataset or fabricated record is introduced.
+This project analyses course activity and revenue using the supplied EduPro Users, Teachers, Courses, and Transactions tables. The current forecast evaluation uses a rolling one-step-ahead chronological backtest, comparing Ridge, Random Forest, and HistGradientBoosting with a naive previous-month baseline. On the October–December 2025 holdout, Random Forest outperforms the baseline for both transaction-event count and revenue. The evaluation covers one source year and one three-month window, so it does not establish stable future performance. No external dataset or fabricated source record is introduced.
 
 ## 1. Business Problem
 
@@ -107,51 +107,45 @@ These definitions measure recorded transaction activity. If the platform contain
 
 ## 5. Modelling and Metrics
 
-The dashboard compares five regression models:
+The current forecasting unit is the course-month. For each course and calendar month, the pipeline calculates EnrollmentCount as the number of distinct TransactionID values and CourseRevenue as the sum of transaction Amount values. Predictors use CourseID, month-of-year sine/cosine features, lagged target values for the previous one, two and three months, and a three-month rolling mean shifted so it contains prior months only.
 
-1. Linear Regression
-2. Ridge Regression
-3. Lasso Regression
-4. Random Forest Regressor
-5. Gradient Boosting Regressor
+The evaluated models are Ridge Regression, Random Forest Regressor, and HistGradientBoosting Regressor. The baseline predicts the next month's value using the previous month's observed value. The rolling one-step-ahead design permits an observed holdout month to become historical input for the following month. It does not use the same month's target as a predictor.
 
-Model performance is evaluated using cross-validated MAE, RMSE, and R². MAE measures the average absolute prediction error, while RMSE gives greater weight to larger errors. R² measures performance relative to a mean-based reference under the evaluation procedure; a negative R² indicates performance worse than that reference.
+The evaluation metrics are:
 
-### 5.1 EnrollmentCount Results
+- MAE: mean absolute prediction error.
+- RMSE: square root of the mean squared prediction error, which gives larger errors more weight.
+- WAPE: sum of absolute errors divided by the sum of absolute actual values.
 
-| Model | CV MAE | CV RMSE | CV R² |
+### 5.1 Chronological Holdout Design
+
+The bundled transaction table contains 10,000 records dated from 1 January 2025 to 30 December 2025, with 60 courses in the course catalogue. The training period ends in September 2025. The test period is October–December 2025. After lag-history rows are removed, there are 360 course-month training rows and 180 course-month test rows per target.
+
+### 5.2 Chronological Results
+
+| Target | Model | MAE | RMSE | WAPE |
+|---|---|---:|---:|---:|
+| CourseRevenue | Random Forest | 282.92 | 684.26 | 22.41% |
+| CourseRevenue | HistGradientBoosting | 286.06 | 708.83 | 22.66% |
+| CourseRevenue | Ridge | 437.87 | 779.58 | 34.68% |
+| EnrollmentCount | Random Forest | 2.93 | 3.84 | 21.56% |
+| EnrollmentCount | Ridge | 2.99 | 3.86 | 21.98% |
+| EnrollmentCount | HistGradientBoosting | 3.18 | 4.13 | 23.40% |
+
+The naive previous-month baseline produced the following results:
+
+| Target | Naive lag-1 MAE | Naive lag-1 RMSE | Naive lag-1 WAPE |
 |---|---:|---:|---:|
-| Ridge | 9.5694 | 11.7840 | -0.0707 |
-| Random Forest | 9.8971 | 12.4756 | -0.1875 |
-| Gradient Boosting | 11.2342 | 13.4844 | -0.5656 |
-| Lasso | 11.6820 | 14.5118 | -0.5472 |
-| Linear Regression | 13.2697 | 16.7683 | -1.0048 |
+| CourseRevenue | 395.11 | 991.33 | 31.30% |
+| EnrollmentCount | 3.99 | 5.08 | 29.32% |
 
-Ridge produces the lowest MAE among the five tested models for EnrollmentCount. However, all five models have negative cross-validated R² values. This indicates that enrollment prediction is weak under the current evaluation procedure. The results do not support claiming that the current models provide reliable course-demand forecasts.
+Random Forest had the lowest MAE for both targets and outperformed the naive baseline on MAE, RMSE and WAPE in this specific holdout. This does not prove that the same improvement will persist in other periods, other markets or future operating conditions.
 
-Further work should examine the features used, the distribution of enrollment counts, the cross-validation setup, and whether the small course-level sample is sufficient for modelling.
+### 5.3 Interpretation and Scope
 
-### 5.2 CourseRevenue Results
+EnrollmentCount measures transaction events identified by distinct TransactionID values. It is not necessarily a count of unique learners, paid enrollments or completed enrollments. CourseRevenue is the sum of transaction Amount values. The source currency and accounting treatment of refunds, retries or repeated purchases have not been independently verified.
 
-| Model | CV MAE | CV RMSE | CV R² |
-|---|---:|---:|---:|
-| Gradient Boosting | 1540.0679 | 3024.5781 | 0.9847 |
-| Ridge | 1977.2276 | 2834.8483 | 0.9809 |
-| Random Forest | 2214.2506 | 4581.5693 | 0.9705 |
-| Lasso | 2827.8159 | 3802.1004 | 0.9590 |
-| Linear Regression | 2830.1759 | 3804.5594 | 0.9590 |
-
-Gradient Boosting produces the lowest MAE among the tested models for CourseRevenue. Its cross-validated R² is 0.9847. Ridge has a slightly lower RMSE, so the best model depends on the metric used to evaluate errors.
-
-The high R² should not be treated as proof of reliable future revenue forecasting. Only 60 course-level records are available, and the feature construction and validation procedure must be examined for possible target leakage. Revenue is also closely related to transaction amounts and course prices, which can make some relationships mechanically strong.
-
-### 5.3 Interpretation of Model Comparison
-
-The current model comparison provides different conclusions for the two targets. EnrollmentCount is difficult to predict using the tested features and current evaluation setup. CourseRevenue has much higher R² values, but further validation is needed to determine how well these results generalise to unseen courses or future periods.
-
-A chronological train/test split is recommended for future forecasting. Feature engineering should use only information that would have been available at the forecast date. Any feature that directly contains or indirectly reveals the target must be excluded from the predictors.
-
-The model results should therefore be described as exploratory baseline comparisons rather than production-ready forecasts.
+The older five-model course-level cross-validation results in `outputs/model_comparison.csv` belong to a separate experiment with a different unit of analysis. They are not directly comparable with the transaction-level monthly chronological results in this section and should not be presented as the current forecast validation.
 
 ## 6. Dashboard
 
@@ -189,11 +183,11 @@ Course revenue is calculated from transaction amounts. If transaction amounts ar
 
 ### 7.5 Validation and Potential Leakage
 
-Cross-validation results depend on how data and features are prepared. Any feature that uses the target or information unavailable at prediction time can lead to overly optimistic scores. The complete feature-generation and validation process should be checked before the model is used for forecasting.
+The current workflow uses historical lag and rolling features shifted to exclude the target month. The three-month test window is still limited, and rolling one-step-ahead evaluation assumes actual values become available each month. The currency and business meaning of Amount and repeated transactions require confirmation.
 
 ### 7.6 Historical Coverage
 
-The supplied transaction examples include dates from 2025. The complete date range should be verified directly from the loaded workbook. Robust seasonal forecasting requires sufficient historical coverage and chronological evaluation.
+The bundled transaction dates span 1 January 2025 to 30 December 2025. One calendar year is insufficient to establish recurring annual seasonality. A longer history and another untouched evaluation period are required.
 
 ### 7.7 Data Quality and Business Meaning
 
@@ -205,8 +199,8 @@ Automated checks can identify technical issues such as invalid dates, missing am
 2. Review data-audit findings and resolve confirmed data-quality problems with reference to the original source.
 3. Confirm whether repeated user-course transactions represent distinct enrollments.
 4. Analyse free and paid course demand separately from revenue.
-5. Evaluate enrollment prediction further because all tested models currently have negative cross-validated R².
-6. Use chronological train/test evaluation for future-period forecasting.
+5. Extend the chronological backtest to more years and a later untouched holdout.
+6. Monitor future monthly performance and preserve each evaluation dataset and model report.
 7. Check all predictors for target leakage and ensure that future information is not used during training.
 8. Collect more historical periods and additional course-level observations before relying on the models for business planning.
 9. Treat feature importance and model relationships as associations, not proof of causation.
@@ -216,6 +210,6 @@ Automated checks can identify technical issues such as invalid dates, missing am
 
 This project provides an initial, reproducible workflow for analysing course demand and revenue on EduPro using the user-supplied workbook. It combines source-data auditing, course and category aggregation, feature engineering, interactive exploration, and regression baseline comparison.
 
-The current results show that enrollment prediction remains weak under the tested evaluation procedure, while the revenue models achieve much higher R² values. However, the small course-level sample and the need to verify feature construction and validation prevent these scores from being treated as proof of reliable future forecasting.
+The October–December 2025 chronological holdout shows that Random Forest outperforms the naive previous-month baseline for both transaction-event count and revenue. One year of history and one test window are not enough to establish stable performance. More data and business-definition checks are needed before operational use.
 
 The project is best regarded as an exploratory analytical foundation. More historical data, clear transaction definitions, leakage checks, and chronological validation are required before using the models to guide operational decisions.
