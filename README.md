@@ -88,8 +88,8 @@ The common misspelling `Tranactions` is also recognized by the project, accordin
 - Price, duration, and rating buckets
 - Course-category comparisons
 - Historical monthly revenue analysis
-- Comparison of Linear Regression, Ridge, Lasso, Random Forest, and Gradient Boosting
-- Model evaluation using MAE, RMSE, and R²
+- Chronological monthly forecasting using Ridge, Random Forest, and HistGradientBoosting
+- Comparison against a naive previous-month baseline using MAE, RMSE, and WAPE
 - Data Explorer with downloadable CSV results
 - Executive summary and research paper
 - Data dictionary and supporting project outputs
@@ -111,35 +111,46 @@ Free-course transactions may contribute to recorded demand without contributing 
 
 Data-quality checks can identify technical issues, but they do not independently prove that every source value or business definition is correct. Repeated transactions should be reviewed to determine whether they represent separate enrollments, retries, refunds, or other events.
 
-## Model Results and Limitations
+## Chronological Forecast Backtest
 
-The project compares five regression models for two targets: `EnrollmentCount` and `CourseRevenue`.
+The repository now runs a reproducible chronological backtest on the bundled source tables in both GitHub Actions and the dashboard. It uses a rolling one-step-ahead design: the models are trained through September 2025, then evaluated on October–December 2025. Each test month uses only transaction history available before that month.
 
-In the current reported model comparison:
+- Source data: 10,000 transaction rows and 60 courses.
+- Full transaction date range: 1 January 2025 to 30 December 2025.
+- Training period: January–September 2025 (after the required lag history, 360 course-month training rows per target).
+- Holdout period: October–December 2025 (180 course-month test rows per target).
+- Models: Ridge, Random Forest, and HistGradientBoosting.
+- Baseline: previous month's value (naive lag-1).
+- Metrics: MAE, RMSE, and WAPE. Revenue amounts use the source `Amount` units; the project does not infer a currency.
 
-### EnrollmentCount
+### Best chronological results
 
-Ridge has the lowest cross-validated MAE among the tested models:
+| Target | Best model | MAE | RMSE | WAPE | Naive lag-1 MAE | Naive lag-1 RMSE | Naive lag-1 WAPE |
+|---|---|---:|---:|---:|---:|---:|---:|
+| EnrollmentCount | Random Forest | 2.93 | 3.84 | 21.56% | 3.99 | 5.08 | 29.32% |
+| CourseRevenue | Random Forest | 282.92 | 684.26 | 22.41% | 395.11 | 991.33 | 31.30% |
 
-- **CV MAE:** 9.5694
-- **CV RMSE:** 11.7840
-- **CV R²:** -0.0707
+Random Forest had the lowest MAE for both targets in this held-out period. It improved on the naive lag-1 baseline for all three reported metrics. This is evidence of better performance on this specific three-month backtest, not proof of reliable future performance. The source contains only one calendar year, so seasonality and performance across other years cannot be established.
 
-All five tested models have negative cross-validated R² values for enrollment count. This indicates weak predictive performance under the current evaluation procedure.
+The older values in `outputs/model_comparison.csv` and earlier five-model cross-validation tables belong to a separate historical course-level experiment. They are not comparable with this transaction-level chronological forecast and must not be quoted as current chronological results.
 
-### CourseRevenue
+### Reproduce the backtest
 
-Gradient Boosting has the lowest cross-validated MAE among the tested models:
+```bash
+python scripts/run_chronological_backtest.py --test-months 3
+pytest -q
+```
 
-- **CV MAE:** 1540.0679
-- **CV RMSE:** 3024.5781
-- **CV R²:** 0.9847
+The script writes `outputs/chronological_backtest.csv` and `outputs/chronological_backtest.json`. GitHub Actions uploads both files as the `edupro-chronological-backtest` artifact. The JSON records the source-file SHA-256 hashes, date window, sample sizes, model scores, and baseline metrics.
 
-Ridge has a slightly lower RMSE than Gradient Boosting in the reported comparison.
+### Limitations
 
-These scores are exploratory. The course-level dataset contains only 60 records, and the feature-generation process must be reviewed for potential target leakage. A high R² score alone does not establish reliable future forecasting performance.
+- The test covers only October–December 2025. A single 3-month window is not enough to establish stable performance.
+- The rolling one-step-ahead test assumes actual prior-month activity is available before each subsequent month's forecast.
+- EnrollmentCount means distinct transaction IDs, not verified unique students or completed enrolments.
+- CourseRevenue is the sum of transaction Amount values. The source currency and business treatment of refunds or retries have not been independently verified.
+- More historical years and an additional untouched period are needed before operational use.
 
-Model scores may change when the data, features, or validation procedure changes. The values above should be checked against the latest `outputs/model_comparison.csv` before being quoted in a final submission.
 
 ## Recommendations
 
