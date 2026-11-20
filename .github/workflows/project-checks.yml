@@ -22,6 +22,17 @@ jobs:
           pip install pytest
       - name: Run data pipeline tests
         run: pytest -q
+      - name: Run chronological backtest on bundled EduPro data
+        run: python scripts/run_chronological_backtest.py --test-months 3
+      - name: Upload chronological backtest report
+        uses: actions/upload-artifact@v4
+        with:
+          name: edupro-chronological-backtest
+          path: |
+            outputs/chronological_backtest.csv
+            outputs/chronological_backtest.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Start Streamlit and check HTTP response
         run: |
           streamlit run app.py --server.headless true --server.port 8501 > streamlit.log 2>&1 &
