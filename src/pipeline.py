@@ -19,12 +19,13 @@ REQUIRED = {
         "Amount", "PaymentMethod", "TeacherID",
     ],
 }
-KEY_COLUMNS = {
+PRIMARY_KEY_COLUMNS = {
     "Users": ["UserID"],
     "Teachers": ["TeacherID"],
     "Courses": ["CourseID"],
-    "Transactions": ["TransactionID", "UserID", "CourseID", "TeacherID"],
+    "Transactions": ["TransactionID"],
 }
+TRANSACTION_REFERENCE_COLUMNS = ["UserID", "CourseID", "TeacherID"]
 NUMERIC_COLUMNS = {
     "Users": ["Age"],
     "Teachers": ["Age", "YearsOfExperience", "TeacherRating"],
@@ -143,11 +144,14 @@ def prepare(sheets):
         ("Users", users), ("Teachers", teachers), ("Courses", courses),
         ("Transactions", tx),
     ):
-        for column in KEY_COLUMNS[name]:
+        columns = PRIMARY_KEY_COLUMNS[name]
+        if name == "Transactions":
+            columns = columns + TRANSACTION_REFERENCE_COLUMNS
+        for column in columns:
             frame[column] = frame[column].astype("string").str.strip()
             if frame[column].isna().any() or frame[column].eq("").any():
                 raise ValueError(f"{name} contains missing or blank {column} values.")
-        for column in KEY_COLUMNS[name]:
+        for column in PRIMARY_KEY_COLUMNS[name]:
             if frame[column].duplicated().any():
                 raise ValueError(
                     f"{name} contains duplicate {column} values after whitespace normalization."
@@ -204,9 +208,17 @@ def prepare(sheets):
     if any(audit_info[key] for key in (
         "unmatched_user_rows", "unmatched_course_rows", "unmatched_teacher_rows"
     )):
+        unmatched = []
+        for key, label in (
+            ("unmatched_user_rows", "UserID"),
+            ("unmatched_course_rows", "CourseID"),
+            ("unmatched_teacher_rows", "TeacherID"),
+        ):
+            if audit_info[key]:
+                unmatched.append(f"{label}: {audit_info[key]}")
         raise ValueError(
-            "Transactions contain UserID, CourseID, or TeacherID references "
-            "absent from their source tables."
+            "Transactions contain references absent from source tables: "
+            + ", ".join(unmatched)
         )
 
     agg = tx.groupby("CourseID").agg(
