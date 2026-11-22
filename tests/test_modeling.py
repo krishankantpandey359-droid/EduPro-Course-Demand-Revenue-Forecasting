@@ -89,3 +89,30 @@ def test_monthly_panel_rejects_invalid_dates():
     transactions.loc[0, "TransactionDate"] = "not-a-date"
     with pytest.raises(ValueError, match="invalid or missing dates"):
         build_monthly_panel(transactions, courses)
+
+def test_monthly_panel_rejects_duplicate_transaction_ids_after_trimming():
+    transactions, courses = sample_data()
+    transactions.loc[1, "TransactionID"] = f"  {transactions.loc[0, 'TransactionID']}  "
+    with pytest.raises(ValueError, match="duplicate transaction IDs"):
+        build_monthly_panel(transactions, courses)
+
+
+def test_monthly_panel_rejects_non_finite_amounts():
+    transactions, courses = sample_data()
+    transactions.loc[0, "Amount"] = float("inf")
+    with pytest.raises(ValueError, match="non-finite amounts"):
+        build_monthly_panel(transactions, courses)
+
+
+def test_monthly_panel_rejects_duplicate_course_master_ids():
+    transactions, courses = sample_data()
+    courses.loc[1, "CourseID"] = courses.loc[0, "CourseID"]
+    with pytest.raises(ValueError, match="duplicate CourseID"):
+        build_monthly_panel(transactions, courses)
+
+
+@pytest.mark.parametrize("test_months", [0, -1, True, False, 3.5, "3", None])
+def test_backtest_rejects_non_positive_or_non_integer_holdout_months(test_months):
+    transactions, courses = sample_data()
+    with pytest.raises(ValueError, match="test_months must be a positive integer"):
+        fit_all(transactions, courses, test_months=test_months)

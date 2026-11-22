@@ -26,30 +26,51 @@ FEATURES = [
 
 def build_monthly_panel(transactions, courses):
     """Build a complete course-month panel with strictly historical features."""
-    required_tx = {"TransactionID", "CourseID", "TransactionDate", "Amount"}
-    required_courses = {"CourseID"}
-    if not required_tx.issubset(transactions.columns):
-        raise ValueError(f"Transactions missing columns: {sorted(required_tx - set(transactions.columns))}")
-    if not required_courses.issubset(courses.columns):
-        raise ValueError(f"Courses missing columns: {sorted(required_courses - set(courses.columns))}")
+    required_tx = ["TransactionID", "CourseID", "TransactionDate", "Amount"]
+    required_courses = ["CourseID"]
+    if not isinstance(transactions, pd.DataFrame) or not isinstance(courses, pd.DataFrame):
+        raise TypeError("Transactions and Courses must be pandas DataFrames.")
+    if not transactions.columns.is_unique or not courses.columns.is_unique:
+        raise ValueError("Source tables contain duplicate column names.")
+    missing_tx = sorted(set(required_tx) - set(transactions.columns))
+    missing_courses = sorted(set(required_courses) - set(courses.columns))
+    if missing_tx:
+        raise ValueError(f"Transactions missing columns: {missing_tx}")
+    if missing_courses:
+        raise ValueError(f"Courses missing columns: {missing_courses}")
 
-    tx = transactions[list(required_tx)].copy()
+    tx = transactions.loc[:, required_tx].copy()
+    tx["TransactionID"] = tx["TransactionID"].astype("string").str.strip()
     tx["CourseID"] = tx["CourseID"].astype("string").str.strip()
-    course_ids = courses["CourseID"].dropna().astype("string").str.strip()
-    if tx["TransactionID"].isna().any() or tx["TransactionID"].astype("string").str.strip().eq("").any():
-        raise ValueError("Transactions contain missing transaction IDs.")
+    course_ids = courses["CourseID"].astype("string").str.strip()
+
+    if tx[["TransactionID", "CourseID"]].isna().any().any():
+        raise ValueError("Transactions contain missing transaction or course IDs.")
+    if tx[["TransactionID", "CourseID"]].eq("").any().any():
+        raise ValueError("Transactions contain blank transaction or course IDs.")
     if tx["TransactionID"].duplicated().any():
-        raise ValueError("Transactions contain duplicate transaction IDs.")
-    if tx["CourseID"].isna().any() or tx["CourseID"].eq("").any():
-        raise ValueError("Transactions contain missing course IDs.")
-    unknown_courses = sorted(set(tx["CourseID"].dropna()) - set(course_ids))
+        raise ValueError("Transactions contain duplicate transaction IDs after whitespace normalization.")
+    if course_ids.isna().any() or course_ids.eq("").any():
+        raise ValueError("Courses contains missing or blank CourseID values.")
+    if course_ids.duplicated().any():
+        raise ValueError("Courses contains duplicate CourseID values after whitespace normalization.")
+
+    unknown_courses = sorted(set(tx["CourseID"]) - set(course_ids))
     if unknown_courses:
-        raise ValueError(f"Transactions contain course IDs absent from Courses: {unknown_courses[:5]}")
-    tx["TransactionDate"] = pd.to_datetime(tx["TransactionDate"], errors="coerce", dayfirst=True)
+        raise ValueError(
+            "Transactions contain course IDs absent from Courses: "
+            + ", ".join(unknown_courses[:10])
+        )
+
+    tx["TransactionDate"] = pd.to_datetime(
+        tx["TransactionDate"], errors="coerce", dayfirst=True
+    )
     tx["Amount"] = pd.to_numeric(tx["Amount"], errors="coerce")
     if tx["TransactionDate"].isna().any():
         raise ValueError("Transactions contain invalid or missing dates.")
-    if tx["Amount"].isna().any() or not np.isfinite(tx["Amount"].to_numpy(dtype=float)).all():
+    if tx["Amount"].isna().any() or not np.isfinite(
+        tx["Amount"].to_numpy(dtype=float)
+    ).all():
         raise ValueError("Transactions contain missing, non-numeric, or non-finite amounts.")
     if tx.empty:
         raise ValueError("No valid dated transactions are available for forecasting.")
@@ -66,7 +87,9 @@ def build_monthly_panel(transactions, courses):
     ).to_frame(index=False)
     panel["CourseID"] = panel["CourseID"].astype(str)
     observed["CourseID"] = observed["CourseID"].astype(str)
-    panel = panel.merge(observed, on=["CourseID", "Month"], how="left", validate="one_to_one")
+    panel = panel.merge(
+        observed, on=["CourseID", "Month"], how="left", validate="one_to_one"
+    )
     panel[["EnrollmentCount", "CourseRevenue"]] = panel[
         ["EnrollmentCount", "CourseRevenue"]
     ].fillna(0.0)
@@ -115,9 +138,17 @@ def _metrics(actual, predicted):
 
 def fit_all(transactions, courses, test_months=3):
     """Run a rolling one-step-ahead backtest on the latest chronological months."""
+    if (
+        isinstance(test_months, (bool, np.bool_))
+        or not isinstance(test_months, (int, np.integer))
+        or test_months < 1
+    ):
+        raise ValueError("test_months must be a positive integer.")
+    test_months = int(test_months)
+
     panel = build_monthly_panel(transactions, courses)
     all_months = sorted(panel["Month"].unique())
-    if test_months < 1 or len(all_months) <= test_months + 3:
+    if len(all_months) <= test_months + 3:
         raise ValueError("Need at least four history months plus the requested holdout months.")
 
     first_test_month = all_months[-test_months]

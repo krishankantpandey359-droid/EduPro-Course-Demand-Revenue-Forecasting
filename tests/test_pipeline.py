@@ -46,3 +46,61 @@ def test_prepare_rejects_missing_source_table_without_fabricating_rows():
         assert "no missing rows will be fabricated" in str(exc)
     else:
         raise AssertionError("prepare() should reject an incomplete workbook")
+
+def test_prepare_rejects_missing_transaction_amount():
+    sheets = read_bundled(ROOT / "data")
+    sheets["Transactions"].loc[0, "Amount"] = None
+    try:
+        prepare(sheets)
+    except ValueError as exc:
+        assert "missing or non-numeric Amount" in str(exc)
+    else:
+        raise AssertionError("prepare() should reject a missing Amount")
+
+
+def test_prepare_rejects_duplicate_transaction_id():
+    sheets = read_bundled(ROOT / "data")
+    sheets["Transactions"].loc[1, "TransactionID"] = sheets["Transactions"].loc[0, "TransactionID"]
+    try:
+        prepare(sheets)
+    except ValueError as exc:
+        assert "duplicate TransactionID" in str(exc)
+    else:
+        raise AssertionError("prepare() should reject duplicate TransactionID values")
+
+
+def test_prepare_rejects_unknown_course_reference():
+    sheets = read_bundled(ROOT / "data")
+    sheets["Transactions"].loc[0, "CourseID"] = "UNKNOWN"
+    try:
+        prepare(sheets)
+    except ValueError as exc:
+        assert "references absent" in str(exc)
+    else:
+        raise AssertionError("prepare() should reject unmatched CourseID values")
+
+
+def test_prepare_rejects_duplicate_columns_after_trimming():
+    sheets = read_bundled(ROOT / "data")
+    sheets["Transactions"][" TransactionID "] = sheets["Transactions"]["TransactionID"]
+    report = audit(sheets)
+    row = report.loc[report["Sheet"] == "Transactions"].iloc[0]
+    assert row["Status"] == "DUPLICATE COLUMNS"
+    try:
+        prepare(sheets)
+    except ValueError as exc:
+        assert "duplicate column names" in str(exc)
+    else:
+        raise AssertionError("prepare() should reject duplicate source columns")
+
+
+def test_prepare_rejects_non_finite_transaction_amount():
+    sheets = read_bundled(ROOT / "data")
+    sheets["Transactions"]["Amount"] = sheets["Transactions"]["Amount"].astype(float)
+    sheets["Transactions"].loc[0, "Amount"] = float("inf")
+    try:
+        prepare(sheets)
+    except ValueError as exc:
+        assert "non-finite Amount" in str(exc)
+    else:
+        raise AssertionError("prepare() should reject non-finite Amount values")
