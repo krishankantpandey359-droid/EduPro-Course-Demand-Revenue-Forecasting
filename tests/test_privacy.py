@@ -1,6 +1,6 @@
 import pandas as pd
 
-from privacy import mask_contact_fields
+from privacy import mask_contact_fields, mask_user_identifiers
 
 
 def test_mask_contact_fields_redacts_email_and_phone_without_mutating_source():
@@ -20,9 +20,29 @@ def test_mask_contact_fields_redacts_email_and_phone_without_mutating_source():
     assert source.loc[0, "PhoneNumber"] == "0000000000"
 
 
-def test_mask_contact_fields_leaves_non_contact_fields_unchanged():
-    source = pd.DataFrame({"UserID": ["U1"], "UserName": ["demo_user"], "Age": [21]})
+def test_mask_contact_fields_redacts_person_names_but_preserves_non_personal_fields():
+    source = pd.DataFrame({
+        "UserID": ["U1"],
+        "UserName": ["demo_user"],
+        "TeacherName": ["Demo Teacher"],
+        "CourseName": ["Python"],
+        "Age": [21],
+    })
 
     safe = mask_contact_fields(source)
 
-    pd.testing.assert_frame_equal(safe, source)
+    assert safe.loc[0, "UserName"] == "[redacted]"
+    assert safe.loc[0, "TeacherName"] == "[redacted]"
+    assert safe.loc[0, "CourseName"] == "Python"
+    assert safe.loc[0, "Age"] == 21
+    assert source.loc[0, "UserName"] == "demo_user"
+
+
+def test_mask_user_identifiers_redacts_transaction_user_keys():
+    source = pd.DataFrame({"UserID": ["U00001", "U00002"], "CourseID": ["C1", "C2"]})
+
+    safe = mask_user_identifiers(source)
+
+    assert safe["UserID"].tolist() == ["[redacted]", "[redacted]"]
+    assert safe["CourseID"].tolist() == ["C1", "C2"]
+    assert source["UserID"].tolist() == ["U00001", "U00002"]
