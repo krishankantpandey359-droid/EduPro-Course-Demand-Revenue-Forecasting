@@ -3,9 +3,10 @@ import sys,streamlit as st,plotly.express as px
 ROOT=Path(__file__).parent; sys.path.insert(0,str(ROOT/'src'))
 from pipeline import read_workbook,read_bundled,audit,prepare
 from modeling import fit_all
+from privacy import mask_contact_fields
 st.set_page_config(page_title='EduPro Demand & Revenue',page_icon='📚',layout='wide')
 st.title('📚 EduPro | Course Demand & Revenue Intelligence')
-st.caption('Uses only the EduPro data supplied by the user. No external datasets or generated records.')
+st.caption('Portfolio demonstration using project data. Person-like fields are dummy values. Email and phone fields are masked in data previews and CSV exports.')
 upload=st.sidebar.file_uploader('Upload original EduPro workbook (.xlsx)',type=['xlsx'])
 try: sheets=read_workbook(upload) if upload else read_bundled(ROOT/'data')
 except Exception as e: st.error(f'Workbook could not be read: {e}'); st.stop()
@@ -41,4 +42,6 @@ with tabs[3]:
 with tabs[4]: st.json(r['audit_info']); st.markdown('Unmatched IDs and invalid records are reported; source records are not silently discarded.')
 with tabs[5]:
  name=st.selectbox('Choose a table',['Users','Teachers','Courses','Transactions','Course-level features']); obj={'Users':users,'Teachers':teachers,'Courses':courses,'Transactions':tx,'Course-level features':cf}[name]
- st.dataframe(obj,use_container_width=True,hide_index=True); st.download_button('Download selected table CSV',obj.to_csv(index=False).encode(),name.lower().replace(' ','_')+'.csv','text/csv')
+ safe_obj = mask_contact_fields(obj)
+ st.dataframe(safe_obj,use_container_width=True,hide_index=True)
+ st.download_button('Download selected table CSV (contact fields masked)',safe_obj.to_csv(index=False).encode(),name.lower().replace(' ','_')+'.csv','text/csv')
