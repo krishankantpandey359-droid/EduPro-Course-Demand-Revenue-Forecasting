@@ -90,11 +90,17 @@ The common misspelling `Tranactions` is also recognized by the project, accordin
 - Historical monthly revenue analysis
 - Chronological monthly forecasting using Ridge, Random Forest, and HistGradientBoosting
 - Comparison against a naive previous-month baseline using MAE, RMSE, and WAPE
-- Data Explorer with downloadable CSV results
+- Data Explorer with downloadable CSV results. Email, phone, mobile, and telephone columns are redacted in both previews and CSV exports; source CSV files remain unchanged.
 - Executive summary and research paper
 - Data dictionary and supporting project outputs
 
 The availability of individual features depends on the current project implementation and the data loaded into the application.
+
+## Safe display and date handling
+
+The project owner confirms that person-like fields are dummy values created for this portfolio project. The dashboard masks fields whose column names identify email, phone, mobile, or telephone contact information in both on-screen Data Explorer previews and CSV downloads. The source CSV files are preserved unchanged in the repository.
+
+Text values in `Transactions.TransactionDate` use the explicit day/month/year format (`D/M/YYYY`). Excel cells that are already date values are also accepted. Invalid or missing dates are rejected by the pipeline; Pandas is not asked to infer ambiguous day/month order.
 
 ## Data Integrity and Interpretation
 
