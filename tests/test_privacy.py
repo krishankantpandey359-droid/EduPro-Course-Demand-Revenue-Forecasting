@@ -14,7 +14,8 @@ def test_mask_contact_fields_redacts_email_and_phone_without_mutating_source():
     safe = mask_contact_fields(source)
 
     assert safe["Email"].tolist() == ["[redacted]", ""]
-    assert safe["PhoneNumber"].tolist() == ["[redacted]", None]
+    assert safe["PhoneNumber"].iloc[0] == "[redacted]"
+    assert pd.isna(safe["PhoneNumber"].iloc[1])
     assert source.loc[0, "Email"] == "demo@example.invalid"
     assert source.loc[0, "PhoneNumber"] == "0000000000"
 
