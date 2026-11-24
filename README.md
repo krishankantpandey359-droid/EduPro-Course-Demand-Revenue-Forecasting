@@ -1,6 +1,6 @@
 # EduPro — Course Demand & Revenue Intelligence
 
-A Python and Streamlit project built using only the four EduPro tables supplied by the user. No external datasets or synthetic records are used.
+A Python and Streamlit portfolio project built with fictional, synthetic EduPro data created specifically for development, testing, and demonstration. The records do not represent real people or a real education provider.
 
 ## Included Source Data
 
@@ -9,11 +9,11 @@ A Python and Streamlit project built using only the four EduPro tables supplied 
 - `data/Courses.csv` — 60 rows
 - `data/Transactions.csv` — 10,000 rows
 
-These files contain the source data used by the project. The row counts refer to the records included in the current project.
+These files contain synthetic project data. Names, email addresses, phone numbers, identifiers, and other person-like fields are dummy values created for this project. They are not intended to identify real people. The row counts refer to the records included in the current project.
 
 ## Source-data handling
 
-The data provider confirmed to the project owner that the supplied dataset details are fictional and approved for public portfolio use. This is a provider confirmation reported by the project owner, not an independent verification. The four original CSV files are preserved exactly as supplied. The project does not mask or rewrite names, email-like fields, identifiers, or other source values, and it does not add fabricated records. Automated tests use the supplied files or separate in-memory fixtures only.
+The project owner confirms that the dataset is fictional and was created for this portfolio project. It is not real customer, student, teacher, or employee data. Names, email addresses, phone numbers, and identifiers are dummy values. No real personal data is intentionally included. These records are used only to demonstrate data cleaning, exploratory analysis, forecasting, and dashboard functionality. Automated tests use the project dataset or separate in-memory fixtures.
 
 ## Project Objective
 
@@ -98,7 +98,7 @@ The availability of individual features depends on the current project implement
 
 ## Data Integrity and Interpretation
 
-The analysis is based on the supplied EduPro data. No external dataset or fabricated records are intentionally introduced.
+The analysis is based on the synthetic EduPro dataset created for this project. It does not claim to describe a real company, real students, or real transactions.
 
 Derived values are calculated from the source tables:
 
