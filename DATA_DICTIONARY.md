@@ -15,3 +15,11 @@
 - PriceBand, DurationBucket, RatingTier: categories derived from supplied numeric columns
 
 Source CSVs are preserved; derived fields are produced at runtime and do not overwrite source values.
+
+## Demonstration data and safe display
+
+The project owner confirms that names, email-like values, phone-like values, and identifiers are dummy values created for this portfolio project. This statement does not establish the source or redistribution licence of every other dataset field. The Streamlit Data Explorer redacts columns whose names identify email, phone, mobile, or telephone contact information from both on-screen previews and CSV downloads. Original source CSVs are preserved unchanged in the repository.
+
+## Transaction date format
+
+Text dates in `Transactions.TransactionDate` are parsed explicitly as day/month/year (`D/M/YYYY`). Excel cells already stored as dates are accepted as dates. Invalid or missing values are rejected by the pipeline rather than silently guessed.
