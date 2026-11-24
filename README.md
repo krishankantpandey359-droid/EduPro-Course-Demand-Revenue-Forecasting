@@ -1,6 +1,6 @@
 # EduPro — Course Demand & Revenue Intelligence
 
-A Python and Streamlit portfolio project built with fictional, synthetic EduPro data created specifically for development, testing, and demonstration. The records do not represent real people or a real education provider.
+A Python and Streamlit portfolio project for analysing course demand and revenue using the EduPro project dataset. Person-like fields such as names, email addresses, phone numbers, and identifiers are dummy values created for the project.
 
 ## Included Source Data
 
@@ -9,11 +9,11 @@ A Python and Streamlit portfolio project built with fictional, synthetic EduPro 
 - `data/Courses.csv` — 60 rows
 - `data/Transactions.csv` — 10,000 rows
 
-These files contain synthetic project data. Names, email addresses, phone numbers, identifiers, and other person-like fields are dummy values created for this project. They are not intended to identify real people. The row counts refer to the records included in the current project.
+These files contain the project data used by the application. The project owner confirms that names, email addresses, phone numbers, and other person-like fields are dummy values, not real personal information. The row counts refer to the records included in the current project.
 
 ## Source-data handling
 
-The project owner confirms that the dataset is fictional and was created for this portfolio project. It is not real customer, student, teacher, or employee data. Names, email addresses, phone numbers, and identifiers are dummy values. No real personal data is intentionally included. These records are used only to demonstrate data cleaning, exploratory analysis, forecasting, and dashboard functionality. Automated tests use the project dataset or separate in-memory fixtures.
+The project owner confirms that person-like fields in the project data, including names, email addresses, phone numbers, and identifiers, are dummy values created for demonstration. No real personal information is intentionally included. This confirmation concerns personal-information fields; it does not independently establish the provenance or licensing of every non-personal dataset field. Automated tests use the project dataset or separate in-memory fixtures.
 
 ## Project Objective
 
@@ -98,7 +98,7 @@ The availability of individual features depends on the current project implement
 
 ## Data Integrity and Interpretation
 
-The analysis is based on the synthetic EduPro dataset created for this project. It does not claim to describe a real company, real students, or real transactions.
+The analysis is based on the EduPro project dataset. Person-like fields are dummy values and the results should be interpreted as project analysis, not as verified performance of a real company or real individuals.
 
 Derived values are calculated from the source tables:
 
