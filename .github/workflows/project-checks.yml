@@ -2,7 +2,7 @@ name: EduPro project checks
 
 on:
   push:
-    branches: ["main", "audit-fix/edupro-readme-conflict"]
+    branches: ["main", "audit-fix/edupro-readme-conflict", "security/**"]
   pull_request:
     branches: ["main"]
 
