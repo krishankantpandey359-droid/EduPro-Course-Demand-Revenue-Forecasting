@@ -13,6 +13,8 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
+from src.date_utils import parse_dmy_dates
+
 
 TARGETS = {
     "EnrollmentCount": "monthly unique transaction count",
@@ -62,9 +64,7 @@ def build_monthly_panel(transactions, courses):
             + ", ".join(unknown_courses[:10])
         )
 
-    tx["TransactionDate"] = pd.to_datetime(
-        tx["TransactionDate"], errors="coerce", dayfirst=True
-    )
+    tx["TransactionDate"] = parse_dmy_dates(tx["TransactionDate"])
     tx["Amount"] = pd.to_numeric(tx["Amount"], errors="coerce")
     if tx["TransactionDate"].isna().any():
         raise ValueError("Transactions contain invalid or missing dates.")
