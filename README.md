@@ -195,3 +195,7 @@ The structure above summarizes the main project files. The repository also inclu
 EduPro provides an exploratory workflow for analysing recorded course demand and revenue. It combines data-quality checks, course and category summaries, dashboard exploration, and regression baseline comparisons.
 
 The current results indicate that enrollment prediction needs further improvement. Revenue models show stronger reported R² values, but their reliability for future periods remains to be established. The project should therefore be treated as an analytical starting point until data quality, feature construction, and chronological forecasting performance have been verified.
+
+## Latest GitHub Actions validation
+
+Latest verified successful main-branch workflow run checked on 24 November 2026: [GitHub Actions run #45311766891](https://github.com/krishankantpandey359-droid/EduPro-Course-Demand-Revenue-Forecasting/actions/runs/45311766891). This run verifies the checks configured in this repository's workflow; it does not replace manual testing of features outside CI.
