@@ -4,6 +4,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from src.date_utils import parse_dmy_dates
+
 REQUIRED = {
     "Users": ["UserID", "UserName", "Age", "Gender", "Email"],
     "Teachers": [
@@ -193,9 +195,7 @@ def prepare(sheets):
             f"Transactions contain {audit_info['non_finite_amounts']} non-finite Amount values."
         )
 
-    tx["TransactionDate"] = pd.to_datetime(
-        tx["TransactionDate"], errors="coerce", dayfirst=True
-    )
+    tx["TransactionDate"] = parse_dmy_dates(tx["TransactionDate"])
     audit_info["invalid_dates"] = int(tx["TransactionDate"].isna().sum())
     if audit_info["invalid_dates"]:
         raise ValueError(
