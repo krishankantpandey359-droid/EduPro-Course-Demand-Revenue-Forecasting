@@ -1,19 +1,19 @@
 # EduPro — Course Demand & Revenue Intelligence
 
-A Python and Streamlit portfolio project for analysing course demand and revenue using the EduPro project dataset. Person-like fields such as names, email addresses, phone numbers, and identifiers are dummy values created for the project.
+A Python and Streamlit portfolio project for analysing course demand and revenue using the EduPro project tables. The bundled Users table is an independently generated synthetic placeholder table. Other supplied tables have not had their provenance and publication rights independently verified.
 
 ## Included Source Data
 
-- `data/Users.csv` — 3,000 rows
+- `data/Users.csv` — 3,000 independently generated synthetic placeholder rows
 - `data/Teachers.csv` — 60 rows from the supplied EduPro dataset
 - `data/Courses.csv` — 60 rows
 - `data/Transactions.csv` — 10,000 rows
 
-These files contain the project data used by the application. The project owner confirms that names, email addresses, phone numbers, and other person-like fields are dummy values, not real personal information. The row counts refer to the records included in the current project.
+These files contain the project tables used by the application. The Users table contains generated placeholder records, with reserved `.invalid` email addresses. User IDs are retained to preserve transaction references. See [data/DATA_SOURCES_NOTE.md](data/DATA_SOURCES_NOTE.md) for the scope and limitations of this privacy change.
 
 ## Source-data handling
 
-The project owner confirms that person-like fields in the project data, including names, email addresses, phone numbers, and identifiers, are dummy values created for demonstration. No real personal information is intentionally included. This confirmation concerns personal-information fields; it does not independently establish the provenance or licensing of every non-personal dataset field. Automated tests use the project dataset or separate in-memory fixtures.
+The bundled Users table is an independently generated synthetic replacement. This repository does not claim independent verification of the provenance or publication rights of the other supplied tables. See [data/DATA_SOURCES_NOTE.md](data/DATA_SOURCES_NOTE.md).
 
 ## Project Objective
 
@@ -98,7 +98,7 @@ The availability of individual features depends on the current project implement
 
 ## Safe display and date handling
 
-The project owner confirms that person-like fields are dummy values created for this portfolio project. The dashboard masks fields whose column names identify email, phone, mobile, or telephone contact information in both on-screen Data Explorer previews and CSV downloads. The source CSV files are preserved unchanged in the repository.
+The Users table contains generated placeholders and is not exposed as row-level data in the Data Explorer. Transaction exports omit UserID. Teacher-name and contact-like columns are masked in previews and CSV downloads. These controls apply to the Data Explorer, not to arbitrary copies of the source files. See [data/DATA_SOURCES_NOTE.md](data/DATA_SOURCES_NOTE.md).
 
 Text values in `Transactions.TransactionDate` use the explicit day/month/year format (`D/M/YYYY`). Excel cells that are already date values are also accepted. Invalid or missing dates are rejected by the pipeline; Pandas is not asked to infer ambiguous day/month order.
 
