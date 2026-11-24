@@ -1,5 +1,10 @@
+from pathlib import Path
+import sys
+
 import pandas as pd
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 from date_utils import parse_dmy_dates
 
 
