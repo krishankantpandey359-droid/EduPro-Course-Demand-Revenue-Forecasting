@@ -198,4 +198,4 @@ The current results indicate that enrollment prediction needs further improvemen
 
 ## Latest GitHub Actions validation
 
-Latest successful main-branch workflow checked on 26 November 2026: [GitHub Actions run #45794545514](https://github.com/krishankantpandey359-droid/EduPro-Course-Demand-Revenue-Forecasting/actions/runs/45794545514). This run verifies the configured project checks; it does not replace manual testing outside CI.
+Latest successful main-branch workflow checked on 26 November 2026: [GitHub Actions run #45799437352](https://github.com/krishankantpandey359-droid/EduPro-Course-Demand-Revenue-Forecasting/actions/runs/45799437352). This run verifies the configured project checks; it does not replace manual testing outside CI.
