@@ -1,7 +1,9 @@
 {
   "Users": {
     "file": "Users.csv",
-    "rows": 3000
+    "rows": 3000,
+    "source": "Independently generated synthetic placeholder records; stable UserID keys retained for transaction referential integrity.",
+    "privacy": "UserName placeholders and example.invalid email addresses; no real user contact data."
   },
   "Courses": {
     "file": "Courses.csv",

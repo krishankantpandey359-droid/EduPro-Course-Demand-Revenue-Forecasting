@@ -3,10 +3,10 @@ import sys,streamlit as st,plotly.express as px
 ROOT=Path(__file__).parent; sys.path.insert(0,str(ROOT/'src'))
 from pipeline import read_workbook,read_bundled,audit,prepare
 from modeling import fit_all
-from privacy import mask_contact_fields
+from privacy import mask_contact_fields, mask_user_identifiers
 st.set_page_config(page_title='EduPro Demand & Revenue',page_icon='📚',layout='wide')
 st.title('📚 EduPro | Course Demand & Revenue Intelligence')
-st.caption('Portfolio demonstration using project data. Person-like fields are dummy values. Email and phone fields are masked in data previews and CSV exports.')
+st.caption('Portfolio demonstration. The bundled Users table contains generated synthetic placeholders and is not exposed as row-level data. Transaction exports omit UserID; teacher names and contact fields are masked.')
 upload=st.sidebar.file_uploader('Upload original EduPro workbook (.xlsx)',type=['xlsx'])
 try: sheets=read_workbook(upload) if upload else read_bundled(ROOT/'data')
 except Exception as e: st.error(f'Workbook could not be read: {e}'); st.stop()
@@ -41,7 +41,9 @@ with tabs[3]:
  st.markdown('Models: Ridge, Random Forest and HistGradientBoosting. Metrics: MAE, RMSE and WAPE. Each is compared with a naive previous-month baseline. Historical totals elsewhere in the app remain descriptive, not forecasts.')
 with tabs[4]: st.json(r['audit_info']); st.markdown('Unmatched IDs and invalid records are reported; source records are not silently discarded.')
 with tabs[5]:
- name=st.selectbox('Choose a table',['Users','Teachers','Courses','Transactions','Course-level features']); obj={'Users':users,'Teachers':teachers,'Courses':courses,'Transactions':tx,'Course-level features':cf}[name]
+ name=st.selectbox('Choose a table',['Teachers','Courses','Transactions','Course-level features']); obj={'Teachers':teachers,'Courses':courses,'Transactions':tx,'Course-level features':cf}[name]
  safe_obj = mask_contact_fields(obj)
+ if name == 'Transactions':
+  safe_obj = mask_user_identifiers(safe_obj)
  st.dataframe(safe_obj,use_container_width=True,hide_index=True)
- st.download_button('Download selected table CSV (contact fields masked)',safe_obj.to_csv(index=False).encode(),name.lower().replace(' ','_')+'.csv','text/csv')
+ st.download_button('Download selected table CSV (personal fields masked)',safe_obj.to_csv(index=False).encode(),name.lower().replace(' ','_')+'.csv','text/csv')
